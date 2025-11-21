@@ -62,7 +62,7 @@ jobs:
           key: ${{ matrix.settings.target }}
 
       - name: Install cross-compilation tools (Linux ARM64)
-        if: matrix.settings.platform == 'linux-arm64'
+        if: matrix.settings.platform == 'linux-arm64-gnu'
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
@@ -91,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.platform }}
-          path: npm/packages/core/native/${{ matrix.settings.platform }}/
+          path: npm/core/platforms/${{ matrix.settings.platform }}/*.node
           if-no-files-found: error
 
   publish:
@@ -112,7 +112,15 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: npm/packages/core/native
+          path: artifacts
+
+      - name: Copy binaries to platform packages
+        run: |
+          for dir in artifacts/bindings-*/; do
+            platform=$(basename "$dir" | sed 's/bindings-//')
+            mkdir -p "npm/core/platforms/${platform}"
+            cp -v "$dir"/*.node "npm/core/platforms/${platform}/"
+          done
 
       - name: Install dependencies
         working-directory: npm

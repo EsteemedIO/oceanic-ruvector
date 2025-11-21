@@ -1,6 +1,6 @@
 {
   "name": "ruvector",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "description": "High-performance vector database for Node.js with automatic native/WASM fallback",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,14 +15,27 @@
   "keywords": [
     "vector",
     "database",
+    "vector-database",
+    "vector-search",
+    "similarity-search",
+    "semantic-search",
     "embeddings",
-    "search",
-    "similarity",
+    "hnsw",
+    "ann",
+    "ai",
+    "machine-learning",
+    "rag",
     "rust",
     "wasm",
-    "native"
+    "native",
+    "ruv",
+    "ruvector"
   ],
-  "author": "ruv.io",
+  "author": "ruv.io Team <info@ruv.io> (https://ruv.io)",
+  "homepage": "https://ruv.io",
+  "bugs": {
+    "url": "https://github.com/ruvnet/ruvector/issues"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -30,13 +43,13 @@
     "directory": "npm/packages/ruvector"
   },
   "dependencies": {
-    "@ruvector/core": "^0.1.1",
+    "ruvector-core": "^0.1.1",
     "commander": "^11.1.0",
     "chalk": "^4.1.2",
     "ora": "^5.4.1"
   },
   "optionalDependencies": {
-    "@ruvector/wasm": "^0.1.1"
+    "ruvector-wasm": "^0.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
