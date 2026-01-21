@@ -86,10 +86,7 @@ impl LorentzModel {
             return vec![0.0; x.len() - 1];
         }
 
-        x[1..]
-            .iter()
-            .map(|&xi| xi / denominator)
-            .collect()
+        x[1..].iter().map(|&xi| xi / denominator).collect()
     }
 
     /// Verify that a point lies on the hyperboloid
@@ -105,6 +102,7 @@ impl LorentzModel {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::hyperbolic::poincare::PoincareBall;
 
     const TOL: f32 = 1e-3;
 

@@ -42,6 +42,15 @@ credentials.json
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
 
+
+# Removed Windows wrapper files per user request
+hive-mind-prompt-*.txt
+examples/scipix/test_images/
+.fastembed_cache/
+
+# Apify actor storage datasets
+examples/apify/*/storage/
+
 # Claude Flow generated files
 .claude/settings.local.json
 .mcp.json
@@ -70,4 +79,24 @@ claude-flow
 hive-mind-prompt-*.txt
 examples/scipix/test_images/
 .fastembed_cache/
+
+# macOS
 .DS_Store
+
+# Native intelligence database (binary)
+.claude/intelligence/data/intelligence.db
+
+# Intelligence data files (generated, not tracked)
+.claude/intelligence/data/*.json
+
+# RuVector intelligence data
+.ruvector/
+.claude/statusline.sh
+
+# Benchmark generated files
+logs/
+data/
+
+# Large model files
+*.gguf
+test_models/*.gguf

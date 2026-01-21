@@ -6,11 +6,11 @@
 //! - ARM NEON support (4 floats per operation)
 //! - Scalar fallback for all platforms
 
-mod simd;
-mod scalar;
+pub mod scalar;
+pub mod simd;
 
-pub use simd::*;
 pub use scalar::*;
+pub use simd::*;
 
 use std::sync::OnceLock;
 
@@ -95,31 +95,37 @@ fn detect_simd_capability() -> SimdCapability {
 }
 
 /// Create distance function table for the detected capability
+///
+/// Uses the new optimized functions that integrate simsimd 5.9 and
+/// dimension-specialized implementations for maximum performance.
 fn create_distance_functions(cap: SimdCapability) -> DistanceFunctions {
     match cap {
         SimdCapability::Avx512 => DistanceFunctions {
-            // Use AVX2 wrappers as fallback until AVX-512 implementations are added
-            euclidean: simd::euclidean_distance_avx2_wrapper,
-            cosine: simd::cosine_distance_avx2_wrapper,
-            inner_product: simd::inner_product_avx2_wrapper,
+            // Use optimized functions that auto-dispatch based on dimensions
+            euclidean: simd::l2_distance_optimized,
+            cosine: simd::cosine_distance_optimized,
+            inner_product: simd::inner_product_distance_optimized,
             manhattan: simd::manhattan_distance_avx2_wrapper,
         },
         SimdCapability::Avx2 => DistanceFunctions {
-            euclidean: simd::euclidean_distance_avx2_wrapper,
-            cosine: simd::cosine_distance_avx2_wrapper,
-            inner_product: simd::inner_product_avx2_wrapper,
+            // Use optimized functions with simsimd + 4x unrolled AVX2
+            euclidean: simd::l2_distance_optimized,
+            cosine: simd::cosine_distance_optimized,
+            inner_product: simd::inner_product_distance_optimized,
             manhattan: simd::manhattan_distance_avx2_wrapper,
         },
         SimdCapability::Neon => DistanceFunctions {
-            euclidean: simd::euclidean_distance_neon_wrapper,
-            cosine: simd::cosine_distance_neon_wrapper,
-            inner_product: simd::inner_product_neon_wrapper,
+            // Use simsimd on NEON (auto-dispatched)
+            euclidean: simd::l2_distance_simsimd,
+            cosine: simd::cosine_distance_simsimd,
+            inner_product: simd::inner_product_distance_simsimd,
             manhattan: scalar::manhattan_distance, // NEON manhattan not critical
         },
         SimdCapability::Scalar => DistanceFunctions {
-            euclidean: scalar::euclidean_distance,
-            cosine: scalar::cosine_distance,
-            inner_product: scalar::inner_product_distance,
+            // Use simsimd even on scalar (it has good fallbacks)
+            euclidean: simd::l2_distance_simsimd,
+            cosine: simd::cosine_distance_simsimd,
+            inner_product: simd::inner_product_distance_simsimd,
             manhattan: scalar::manhattan_distance,
         },
     }
@@ -138,7 +144,10 @@ pub fn simd_info() -> &'static str {
 
 /// Get detailed SIMD info
 pub fn simd_info_detailed() -> String {
-    let cap = SIMD_CAPABILITY.get().copied().unwrap_or(SimdCapability::Scalar);
+    let cap = SIMD_CAPABILITY
+        .get()
+        .copied()
+        .unwrap_or(SimdCapability::Scalar);
 
     #[cfg(target_arch = "x86_64")]
     {
@@ -175,9 +184,7 @@ pub fn simd_info_detailed() -> String {
 
     #[cfg(target_arch = "aarch64")]
     {
-        return format!(
-            "architecture: aarch64, active: neon, floats_per_op: 4"
-        );
+        return format!("architecture: aarch64, active: neon, floats_per_op: 4");
     }
 
     #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
@@ -262,11 +269,7 @@ pub fn cosine_distance_normalized(a: &[f32], b: &[f32]) -> f32 {
 }
 
 /// Batch distance calculation with parallelism
-pub fn batch_distances(
-    query: &[f32],
-    vectors: &[&[f32]],
-    metric: DistanceMetric,
-) -> Vec<f32> {
+pub fn batch_distances(query: &[f32], vectors: &[&[f32]], metric: DistanceMetric) -> Vec<f32> {
     use rayon::prelude::*;
 
     vectors

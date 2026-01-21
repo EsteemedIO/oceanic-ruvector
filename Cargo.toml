@@ -1,5 +1,5 @@
 [workspace]
-exclude = ["crates/micro-hnsw-wasm"]
+exclude = ["crates/micro-hnsw-wasm", "crates/ruvector-hyperbolic-hnsw", "crates/ruvector-hyperbolic-hnsw-wasm", "examples/ruvLLM/esp32", "examples/ruvLLM/esp32-flash", "examples/edge-net", "examples/data", "examples/ruvLLM"]
 members = [
     "crates/ruvector-core",
     "crates/ruvector-node",
@@ -30,18 +30,46 @@ members = [
     "crates/ruvector-attention",
     "crates/ruvector-attention-wasm",
     "crates/ruvector-attention-node",
+    "crates/ruvector-mincut",
+    "crates/ruvector-mincut-wasm",
+    "crates/ruvector-mincut-node",
+    "crates/ruvector-mincut-gated-transformer",
+    "crates/ruvector-mincut-gated-transformer-wasm",
     "crates/ruvector-postgres",
+    "crates/ruvector-nervous-system",
     "examples/refrag-pipeline",
     "examples/scipix",
     "examples/google-cloud",
-    "examples/ruvLLM",
+    "examples/subpolynomial-time",
     "crates/sona",
     "crates/rvlite",
+    "crates/ruvector-nervous-system",
+    "crates/ruvector-dag",
+    "crates/ruvector-dag-wasm",
+    "crates/ruvector-nervous-system-wasm",
+    "crates/ruvector-economy-wasm",
+    "crates/ruvector-learning-wasm",
+    "crates/ruvector-exotic-wasm",
+    "crates/ruvector-attention-unified-wasm",
+    "crates/ruvector-fpga-transformer",
+    "crates/ruvector-fpga-transformer-wasm",
+    "crates/ruvector-sparse-inference",
+    "crates/ruvector-sparse-inference-wasm",
+    "crates/ruvector-math",
+    "crates/ruvector-math-wasm",
+    "examples/benchmarks",
+    "crates/cognitum-gate-kernel",
+    "crates/cognitum-gate-tilezero",
+    "crates/mcp-gate",
+    "crates/ruQu",
+    "crates/ruvllm",
+    "crates/ruvllm-cli",
+    "crates/ruvllm-wasm",
 ]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.25"
+version = "2.0.0"
 edition = "2021"
 rust-version = "1.77"
 license = "MIT"

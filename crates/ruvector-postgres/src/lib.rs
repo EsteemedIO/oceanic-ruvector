@@ -3,6 +3,16 @@
 //! High-performance PostgreSQL extension for vector similarity search.
 //! A drop-in replacement for pgvector with SIMD optimizations.
 
+// Allow development-stage lints for work-in-progress code
+#![allow(unexpected_cfgs)] // pgrx macros (pg12/pg13) and optional features (tokio)
+#![allow(dead_code)] // Stub implementations and future features
+#![allow(unused_variables)] // WIP function signatures
+#![allow(unused_mut)]
+// Variables prepared for future mutation
+// Allow clippy lints common in pgrx extensions and WIP code
+#![allow(clippy::all)] // Allow all clippy warnings for development
+#![allow(for_loops_over_fallibles)] // pgrx derive macro generates this pattern
+
 use pgrx::prelude::*;
 use pgrx::{GucContext, GucFlags, GucRegistry, GucSetting};
 
@@ -10,26 +20,36 @@ use pgrx::{GucContext, GucFlags, GucRegistry, GucSetting};
 ::pgrx::pg_module_magic!();
 
 // Module declarations
-pub mod types;
-pub mod distance;
-pub mod index;
-pub mod quantization;
-pub mod operators;
 pub mod attention;
-pub mod sparse;
+pub mod dag;
+pub mod distance;
 pub mod gnn;
-pub mod routing;
-pub mod learning;
 pub mod graph;
+pub mod healing;
+pub mod hybrid;
 pub mod hyperbolic;
+pub mod index;
+pub mod integrity;
+pub mod learning;
+pub mod operators;
+pub mod quantization;
+pub mod routing;
+pub mod sparse;
+pub mod tenancy;
+pub mod types;
+pub mod workers;
 
 // Optional: Local embedding generation (requires 'embeddings' feature)
 #[cfg(feature = "embeddings")]
 pub mod embeddings;
 
+// Optional: Mincut-gated transformer (requires 'gated-transformer' feature)
+#[cfg(feature = "gated-transformer")]
+pub mod gated_transformer;
+
 // Re-exports for convenience
+pub use distance::{cosine_distance, euclidean_distance, inner_product_distance, DistanceMetric};
 pub use types::RuVector;
-pub use distance::{DistanceMetric, euclidean_distance, cosine_distance, inner_product_distance};
 
 /// Extension version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -49,6 +69,11 @@ pub const DEFAULT_IVFFLAT_PROBES: usize = 1;
 // GUC variables
 static EF_SEARCH: GucSetting<i32> = GucSetting::<i32>::new(DEFAULT_HNSW_EF_SEARCH as i32);
 static PROBES: GucSetting<i32> = GucSetting::<i32>::new(DEFAULT_IVFFLAT_PROBES as i32);
+
+// Hybrid search GUC variables
+static HYBRID_ALPHA: GucSetting<f64> = GucSetting::<f64>::new(0.5);
+static HYBRID_RRF_K: GucSetting<i32> = GucSetting::<i32>::new(60);
+static HYBRID_PREFETCH_K: GucSetting<i32> = GucSetting::<i32>::new(100);
 
 // ============================================================================
 // Extension Initialization
@@ -82,6 +107,46 @@ pub extern "C" fn _PG_init() {
         GucContext::Userset,
         GucFlags::default(),
     );
+
+    // Hybrid search GUCs
+    GucRegistry::define_float_guc(
+        "ruvector.hybrid_alpha",
+        "Default alpha for hybrid linear fusion (0=keyword only, 1=vector only)",
+        "Controls the blend between vector and keyword search",
+        &HYBRID_ALPHA,
+        0.0,
+        1.0,
+        GucContext::Userset,
+        GucFlags::default(),
+    );
+
+    GucRegistry::define_int_guc(
+        "ruvector.hybrid_rrf_k",
+        "RRF constant for hybrid search (default 60)",
+        "Lower values give more weight to top-ranked results",
+        &HYBRID_RRF_K,
+        1,
+        1000,
+        GucContext::Userset,
+        GucFlags::default(),
+    );
+
+    GucRegistry::define_int_guc(
+        "ruvector.hybrid_prefetch_k",
+        "Number of results to prefetch from each branch",
+        "Higher values improve recall but increase latency",
+        &HYBRID_PREFETCH_K,
+        1,
+        10000,
+        GucContext::Userset,
+        GucFlags::default(),
+    );
+
+    // Initialize tenant GUCs for multi-tenancy
+    tenancy::init_tenant_gucs();
+
+    // Note: DAG neural learning is initialized on first use
+    // No explicit initialization required - state is lazy-loaded
 
     // Log initialization
     pgrx::log!(
@@ -155,7 +220,7 @@ fn scalar_quantize_arr(v: Vec<f32>) -> pgrx::JsonB {
 // Tests
 // ============================================================================
 
-#[cfg(any(test, feature = "pg_test"))]
+#[cfg(feature = "pg_test")]
 #[pg_schema]
 mod tests {
     use super::*;

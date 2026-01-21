@@ -43,59 +43,100 @@
 pub mod attention;
 pub mod config;
 pub mod error;
+pub mod graph;
+pub mod hyperbolic;
+pub mod moe;
+pub mod sdk;
+pub mod sparse;
+pub mod training;
 pub mod traits;
 pub mod utils;
-pub mod hyperbolic;
-pub mod sparse;
-pub mod moe;
-pub mod graph;
-pub mod training;
-pub mod sdk;
+
+// Advanced attention mechanisms
+pub mod curvature;
+pub mod topology;
+pub mod transport;
+
+// Mathematical foundations
+pub mod info_bottleneck;
+pub mod info_geometry;
+pub mod pde_attention;
+pub mod unified_report;
 
 // Re-export main types
 pub use attention::{MultiHeadAttention, ScaledDotProductAttention};
 pub use config::{AttentionConfig, GraphAttentionConfig, SparseAttentionConfig};
 pub use error::{AttentionError, AttentionResult};
+pub use hyperbolic::{
+    exp_map, log_map, mobius_add, poincare_distance, project_to_ball, HyperbolicAttention,
+    HyperbolicAttentionConfig, MixedCurvatureAttention, MixedCurvatureConfig,
+};
 pub use traits::{
     Attention, EdgeInfo, GeometricAttention, Gradients, GraphAttention, SparseAttention,
     SparseMask, TrainableAttention,
 };
-pub use hyperbolic::{
-    poincare_distance, mobius_add, exp_map, log_map, project_to_ball,
-    HyperbolicAttention, HyperbolicAttentionConfig,
-    MixedCurvatureAttention, MixedCurvatureConfig,
-};
 
 // Sparse attention exports
 pub use sparse::{
-    SparseMaskBuilder, AttentionMask,
-    LocalGlobalAttention, LinearAttention, FlashAttention,
+    AttentionMask, FlashAttention, LinearAttention, LocalGlobalAttention, SparseMaskBuilder,
 };
 
 // MoE exports
 pub use moe::{
-    MoEAttention, MoEConfig,
-    Expert, ExpertType, StandardExpert, HyperbolicExpert, LinearExpert,
-    Router, LearnedRouter, TopKRouting,
+    Expert, ExpertType, HyperbolicExpert, LearnedRouter, LinearExpert, MoEAttention, MoEConfig,
+    Router, StandardExpert, TopKRouting,
 };
 
 // Graph attention exports
 pub use graph::{
-    EdgeFeaturedAttention, EdgeFeaturedConfig,
-    GraphRoPE, RoPEConfig,
-    DualSpaceAttention, DualSpaceConfig,
+    DualSpaceAttention, DualSpaceConfig, EdgeFeaturedAttention, EdgeFeaturedConfig, GraphRoPE,
+    RoPEConfig,
 };
 
 // Training exports
 pub use training::{
-    Loss, InfoNCELoss, LocalContrastiveLoss, SpectralRegularization, Reduction,
-    Optimizer, SGD, Adam, AdamW,
-    CurriculumScheduler, CurriculumStage, TemperatureAnnealing, DecayType,
-    NegativeMiner, HardNegativeMiner, MiningStrategy,
+    Adam, AdamW, CurriculumScheduler, CurriculumStage, DecayType, HardNegativeMiner, InfoNCELoss,
+    LocalContrastiveLoss, Loss, MiningStrategy, NegativeMiner, Optimizer, Reduction,
+    SpectralRegularization, TemperatureAnnealing, SGD,
 };
 
 // SDK exports
-pub use sdk::{AttentionBuilder, AttentionPipeline, presets};
+pub use sdk::{presets, AttentionBuilder, AttentionPipeline};
+
+// Transport (OT-based attention) exports
+pub use transport::{
+    CentroidCache, CentroidOTAttention, CentroidOTConfig, ProjectionCache,
+    SlicedWassersteinAttention, SlicedWassersteinConfig, WindowCache,
+};
+
+// Curvature (Mixed curvature attention) exports
+pub use curvature::{
+    ComponentQuantizer, FusedCurvatureConfig, MixedCurvatureCache,
+    MixedCurvatureFusedAttention, QuantizationConfig, QuantizedVector, TangentSpaceMapper,
+    TangentSpaceConfig,
+};
+
+// Topology (Gated attention) exports
+pub use topology::{
+    AttentionMode, AttentionPolicy, CoherenceMetric, PolicyConfig, TopologyGatedAttention,
+    TopologyGatedConfig, WindowCoherence,
+};
+
+// Information Geometry exports
+pub use info_geometry::{FisherConfig, FisherMetric, NaturalGradient, NaturalGradientConfig};
+
+// Information Bottleneck exports
+pub use info_bottleneck::{
+    DiagonalGaussian, IBConfig, InformationBottleneck, KLDivergence,
+};
+
+// PDE Attention exports
+pub use pde_attention::{DiffusionAttention, DiffusionConfig, GraphLaplacian, LaplacianType};
+
+// Unified Report exports
+pub use unified_report::{
+    AttentionRecommendation, GeometryReport, MetricType, MetricValue, ReportBuilder, ReportConfig,
+};
 
 /// Library version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
