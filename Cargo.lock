@@ -7780,6 +7780,7 @@ dependencies = [
  "ruvector-core 2.0.0",
  "ruvector-filter",
  "ruvector-metrics",
+ "ruvector-sona",
  "serde",
  "serde_json",
  "thiserror 2.0.17",

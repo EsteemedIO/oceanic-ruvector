@@ -24,7 +24,9 @@ include = [
 wasm-opt = false
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+# rlib for use as dependency (ruvector-node, etc.)
+# cdylib is added automatically by wasm-pack for WASM targets
+crate-type = ["rlib"]
 
 [features]
 default = ["serde-support"]

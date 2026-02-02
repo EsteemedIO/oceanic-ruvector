@@ -17,6 +17,7 @@ ruvector-core = { path = "../ruvector-core" }
 ruvector-collections = { path = "../ruvector-collections" }
 ruvector-filter = { path = "../ruvector-filter" }
 ruvector-metrics = { path = "../ruvector-metrics" }
+ruvector-sona = { path = "../sona", features = ["napi"] }
 
 # Node.js bindings
 napi = { workspace = true }

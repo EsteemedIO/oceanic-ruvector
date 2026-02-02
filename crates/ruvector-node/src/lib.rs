@@ -22,6 +22,10 @@ use ruvector_filter::FilterExpression;
 use ruvector_metrics::{gather_metrics, HealthChecker, HealthStatus};
 use std::path::PathBuf;
 
+// Re-export SONA N-API bindings (SonaEngine, JsSonaConfig, JsLearnedPattern)
+// The #[napi] attributes in ruvector_sona::napi_simple are picked up by napi-build
+pub use ruvector_sona::napi_simple::*;
+
 /// Distance metric for similarity calculation
 #[napi(string_enum)]
 #[derive(Debug)]

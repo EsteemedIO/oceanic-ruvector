@@ -278,12 +278,113 @@ export interface CollectionManagerConstructor {
   new(basePath?: string): CollectionManager;
 }
 
+// ============================================================================
+// SONA (Self-Optimizing Neural Architecture) Types
+// ============================================================================
+
+/**
+ * SONA engine configuration
+ */
+export interface SonaConfig {
+  /** Hidden dimension size */
+  hiddenDim: number;
+  /** Embedding dimension (defaults to hiddenDim) */
+  embeddingDim?: number;
+  /** Micro-LoRA rank (1-2, default: 1) */
+  microLoraRank?: number;
+  /** Base LoRA rank (default: 8) */
+  baseLoraRank?: number;
+  /** Micro-LoRA learning rate (default: 0.001) */
+  microLoraLr?: number;
+  /** Base LoRA learning rate (default: 0.0001) */
+  baseLoraLr?: number;
+  /** EWC lambda regularization (default: 1000.0) */
+  ewcLambda?: number;
+  /** Number of pattern clusters (default: 50) */
+  patternClusters?: number;
+  /** Trajectory buffer capacity (default: 10000) */
+  trajectoryCapacity?: number;
+  /** Background learning interval in ms (default: 3600000 = 1 hour) */
+  backgroundIntervalMs?: number;
+  /** Quality threshold for learning (default: 0.5) */
+  qualityThreshold?: number;
+  /** Enable SIMD optimizations (default: true) */
+  enableSimd?: boolean;
+}
+
+/**
+ * Learned pattern from SONA engine
+ */
+export interface LearnedPattern {
+  /** Pattern identifier */
+  id: string;
+  /** Cluster centroid embedding */
+  centroid: number[];
+  /** Number of trajectories in cluster */
+  clusterSize: number;
+  /** Total weight of trajectories */
+  totalWeight: number;
+  /** Average quality of member trajectories */
+  avgQuality: number;
+  /** Creation timestamp (Unix seconds) */
+  createdAt: string;
+  /** Last access timestamp (Unix seconds) */
+  lastAccessed: string;
+  /** Total access count */
+  accessCount: number;
+  /** Pattern type */
+  patternType: string;
+}
+
+/**
+ * SONA engine for runtime-adaptive learning
+ */
+export interface SonaEngine {
+  /** Start a new trajectory recording */
+  beginTrajectory(queryEmbedding: number[]): number;
+  /** Add a step to trajectory */
+  addTrajectoryStep(trajectoryId: number, activations: number[], attentionWeights: number[], reward: number): void;
+  /** Set model route for trajectory */
+  setTrajectoryRoute(trajectoryId: number, route: string): void;
+  /** Add context to trajectory */
+  addTrajectoryContext(trajectoryId: number, contextId: string): void;
+  /** Complete a trajectory and submit for learning */
+  endTrajectory(trajectoryId: number, quality: number): void;
+  /** Apply micro-LoRA transformation to input */
+  applyMicroLora(input: number[]): number[];
+  /** Apply base-LoRA transformation to layer output */
+  applyBaseLora(layerIdx: number, input: number[]): number[];
+  /** Run background learning cycle if due */
+  tick(): string | null;
+  /** Force background learning cycle immediately */
+  forceLearn(): string;
+  /** Flush instant loop updates */
+  flush(): void;
+  /** Find similar learned patterns to query */
+  findPatterns(queryEmbedding: number[], k: number): LearnedPattern[];
+  /** Get engine statistics as JSON string */
+  getStats(): string;
+  /** Enable or disable the engine */
+  setEnabled(enabled: boolean): void;
+  /** Check if engine is enabled */
+  isEnabled(): boolean;
+}
+
+/**
+ * SonaEngine constructor interface
+ */
+export interface SonaEngineConstructor {
+  new(hiddenDim: number): SonaEngine;
+  withConfig(config: SonaConfig): SonaEngine;
+}
+
 /**
  * Native binding interface
  */
 export interface NativeBinding {
   VectorDB: VectorDBConstructor;
   CollectionManager: CollectionManagerConstructor;
+  SonaEngine: SonaEngineConstructor;
   version(): string;
   hello(): string;
   getMetrics(): string;
@@ -366,6 +467,7 @@ const nativeBinding = loadNativeBinding();
 // Note: NAPI-RS exports as VectorDb (lowercase d), we re-export as VectorDB for consistency
 export const VectorDB = (nativeBinding as any).VectorDb || nativeBinding.VectorDB;
 export const CollectionManager = nativeBinding.CollectionManager;
+export const SonaEngine = nativeBinding.SonaEngine;
 export const version = nativeBinding.version;
 export const hello = nativeBinding.hello;
 export const getMetrics = nativeBinding.getMetrics;
@@ -386,6 +488,7 @@ export { attention };
 export default {
   VectorDB,
   CollectionManager,
+  SonaEngine,
   version,
   hello,
   getMetrics,
