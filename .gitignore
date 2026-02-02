@@ -100,3 +100,4 @@ data/
 # Large model files
 *.gguf
 test_models/*.gguf
+npm/core/dist-cjs/
